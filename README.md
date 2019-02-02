@@ -2,7 +2,4 @@
 generate logstash conf template from a csv file
 
 ## How to Use
-$./generate /path/to/csv_file
-
-## Description
-+ シュッとconfファイルを生成してくれる自分用のツールです。ろくに動確してません。(たぶん穴だらけ)
+$./logstash_gen.exe /path/to/csv_file
