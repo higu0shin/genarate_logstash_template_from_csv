@@ -10,26 +10,28 @@ import (
 
 func main() {
 	var path string
-
+	var sc bufio.Scanner
 	//ファイル名の取得。
 	// 引数にパス指定が無ければ入力させる。
 	if len(os.Args) < 2 {
-		fmt.Println("CSVファイルのパスを入力してください。(ex. /home/hogehoge/sample.csv)")
-		fmt.Scan(&path)
+		//fmt.Println("CSVファイルのパスを入力してください。(ex. /home/hogehoge/sample.csv)")
+		sc = *bufio.NewScanner(os.Stdin)
+
 	} else {
 		// 引数にパス指定があればそれを利用。
 		path = os.Args[1]
-	}
-	path, _ = filepath.Abs(path)
-	file, err := os.Open(path)
-	if err != nil {
-		// Openエラー
-		fmt.Println("ファイルを開けませんでした。パス・権限を確認してください。")
-		os.Exit(-1)
+		path, _ = filepath.Abs(path)
+		file, err := os.Open(path)
+		if err != nil {
+			// Openエラー
+			fmt.Println("ファイルを開けませんでした。パス・権限を確認してください。")
+			os.Exit(-1)
+		}
+		defer file.Close()
+		sc = *bufio.NewScanner(file)
 	}
 
-	defer file.Close()
-	columns := getFirstLine(file)
+	columns := getFirstLine(&sc)
 
 	logstashInput := "input{\n  file{\n    path => \"" + path + "\"\n    start_position => \"beginning\"\n    sincedb_path => \"/dev/null\"\n    #sincedb_path => \"nul\"\n  }\n}\n"
 	logstashFilter := "filter{\n  csv{\n    columns=> [" + printHeader(columns) + "]\n  }\n}\n"
@@ -57,8 +59,7 @@ func printHeader(columns string) string {
 	return result
 }
 
-func getFirstLine(file *os.File) string {
-	sc := bufio.NewScanner(file)
+func getFirstLine(sc *bufio.Scanner) string {
 	/*for i := 1; sc.Scan(); i++ {
 		if err := sc.Err(); err != nil {
 			// エラー処理
